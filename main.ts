@@ -48,6 +48,7 @@ import {
 
 interface ICircleOptions {
   center: TCoords;
+  description?: string;
   name?: string;
   radius: number;
 }
@@ -57,10 +58,12 @@ interface IGeometry {
 }
 interface IPointOptions {
   coordinate: TCoords;
+  description?: string;
   name?: string;
 }
 interface IPolygonOptions {
   coordinates: Array<TCoords>;
+  description?: string;
   name?: string;
 }
 
@@ -71,6 +74,15 @@ type TGeometryLayer = L.Circle | L.Marker | L.Polygon | L.Polyline | L.Rectangle
 type TPointOptions = IPointOptions & L.MarkerOptions;
 
 type TPolygonOptions = IPolygonOptions & L.PolylineOptions;
+
+const HTML_ESCAPE_MAP: Record<string, string> = {
+  '\n': '<br>',
+  '"': '&quot;',
+  '&': '&amp;',
+  "'": '&#039;',
+  '<': '&lt;',
+  '>': '&gt;',
+};
 
 const HALF_DIVISOR = 2;
 const CROSS_HALF_SIZE_PIXELS = CROSS_SIZE_PIXELS / HALF_DIVISOR;
@@ -85,22 +97,28 @@ const CROSS_ICON = L.divIcon({
   iconSize: [CROSS_SIZE_PIXELS, CROSS_SIZE_PIXELS],
 });
 
-const bindNameTooltip = (layer: L.Layer, name?: string): void => {
-  if (!name) {
-    return;
-  }
+const escapeHtml = (value: string): string => value
+  .replace(/[&"'<>\n]/g, (char) => HTML_ESCAPE_MAP[char]);
 
-  if (
-    layer instanceof L.Circle
-    || layer instanceof L.Marker
-    || layer instanceof L.Polygon
-    || layer instanceof L.Polyline
-    || layer instanceof L.Rectangle
-  ) {
+const toPopupContent = (name?: string, description?: string): string => [
+  name ? `<strong>${escapeHtml(name)}</strong>` : '',
+  description ? `<div>${escapeHtml(description)}</div>` : '',
+].filter(Boolean).join('');
+
+const bindGeometryText = (
+  layer: TGeometryLayer,
+  name?: string,
+  description?: string,
+): void => {
+  if (name) {
     layer.bindTooltip(name, {
       direction: 'top',
       sticky: true,
     });
+  }
+
+  if (name || description) {
+    layer.bindPopup(toPopupContent(name, description));
   }
 };
 
@@ -140,7 +158,7 @@ class MapPlayground {
 
     this.addCrossAt(parsedCenter);
 
-    bindNameTooltip(circle, options.name);
+    bindGeometryText(circle, options.name, options.description);
 
     this.geometries.push({ layer: circle, type: EGeometryType.CIRCLE });
     this.map.fitBounds(circle.getBounds());
@@ -166,7 +184,7 @@ class MapPlayground {
     const parsedCoordinate = toNumericCoords(options.coordinate);
     const marker = L.marker(parsedCoordinate, options).addTo(this.map);
 
-    bindNameTooltip(marker, options.name);
+    bindGeometryText(marker, options.name, options.description);
 
     this.geometries.push({ layer: marker, type: EGeometryType.POINT });
     this.map.setView(parsedCoordinate);
@@ -199,7 +217,7 @@ class MapPlayground {
 
     this.addCrossesAt(parsedCoordinates);
 
-    bindNameTooltip(polygon, options.name);
+    bindGeometryText(polygon, options.name, options.description);
 
     this.geometries.push({ layer: polygon, type: EGeometryType.POLYGON });
     this.map.fitBounds(polygon.getBounds());
@@ -335,7 +353,7 @@ class MapPlayground {
 
     this.addCrossAt(parsedCenter);
 
-    bindNameTooltip(layer, data.name);
+    bindGeometryText(layer, data.name, data.description);
 
     return layer;
   }
@@ -353,7 +371,7 @@ class MapPlayground {
 
     this.addCrossesAt(parsedCoordinates);
 
-    bindNameTooltip(layer, data.name);
+    bindGeometryText(layer, data.name, data.description);
 
     return layer;
   }
@@ -363,7 +381,7 @@ class MapPlayground {
 
     const layer = L.marker(parsedCoordinate).addTo(this.map);
 
-    bindNameTooltip(layer, data.name);
+    bindGeometryText(layer, data.name, data.description);
 
     return layer;
   }
@@ -382,7 +400,7 @@ class MapPlayground {
 
     this.addCrossesAt(parsedCoordinates);
 
-    bindNameTooltip(layer, data.name);
+    bindGeometryText(layer, data.name, data.description);
 
     return layer;
   }
@@ -401,7 +419,7 @@ class MapPlayground {
 
     this.addCrossesAt(parsedCoordinates);
 
-    bindNameTooltip(layer, data.name);
+    bindGeometryText(layer, data.name, data.description);
 
     return layer;
   }
@@ -429,7 +447,7 @@ class MapPlayground {
 
     this.addCrossesAt(rectangleCorners);
 
-    bindNameTooltip(layer, data.name);
+    bindGeometryText(layer, data.name, data.description);
 
     return layer;
   }
