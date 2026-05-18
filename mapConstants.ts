@@ -23,5 +23,5 @@ export const EXPECTED_COORDS_COUNT = 2;
 export const MINUTES_TO_DEGREES_DIVISOR = 60;
 
 export const CROSS_COLOR = '#111111';
-export const CROSS_HALF_SIZE_DEGREES = 0.0001;
+export const CROSS_SIZE_PIXELS = 10;
 export const CROSS_WEIGHT = 1;

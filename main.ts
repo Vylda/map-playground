@@ -20,7 +20,7 @@ import {
   CIRCLE_DEFAULT_OPACITY,
   CIRCLE_DEFAULT_RADIUS,
   CROSS_COLOR,
-  CROSS_HALF_SIZE_DEGREES,
+  CROSS_SIZE_PIXELS,
   CROSS_WEIGHT,
   DEFAULT_FILL_OPACITY,
   DEFAULT_OPACITY,
@@ -72,6 +72,19 @@ type TPointOptions = IPointOptions & L.MarkerOptions;
 
 type TPolygonOptions = IPolygonOptions & L.PolylineOptions;
 
+const HALF_DIVISOR = 2;
+const CROSS_HALF_SIZE_PIXELS = CROSS_SIZE_PIXELS / HALF_DIVISOR;
+
+const CROSS_ICON = L.divIcon({
+  className: 'map-cross-icon',
+  html: `
+    <span style="position:absolute;left:0;top:50%;width:${CROSS_SIZE_PIXELS}px;height:${CROSS_WEIGHT}px;background:${CROSS_COLOR};transform:translateY(-50%);"></span>
+    <span style="position:absolute;left:50%;top:0;width:${CROSS_WEIGHT}px;height:${CROSS_SIZE_PIXELS}px;background:${CROSS_COLOR};transform:translateX(-50%);"></span>
+  `,
+  iconAnchor: [CROSS_HALF_SIZE_PIXELS, CROSS_HALF_SIZE_PIXELS],
+  iconSize: [CROSS_SIZE_PIXELS, CROSS_SIZE_PIXELS],
+});
+
 const bindNameTooltip = (layer: L.Layer, name?: string): void => {
   if (!name) {
     return;
@@ -92,7 +105,7 @@ const bindNameTooltip = (layer: L.Layer, name?: string): void => {
 };
 
 class MapPlayground {
-  private crossLayers: Array<L.Polyline> = [];
+  private crossLayers: Array<L.Marker> = [];
 
   private geometries: Array<IGeometry> = [];
 
@@ -292,33 +305,13 @@ class MapPlayground {
   }
 
   private addCrossAt(point: [number, number]): void {
-    const [latitude, longitude] = point;
-    const horizontalLine = L.polyline(
-      [
-        [latitude, longitude - CROSS_HALF_SIZE_DEGREES],
-        [latitude, longitude + CROSS_HALF_SIZE_DEGREES],
-      ],
-      {
-        color: CROSS_COLOR,
-        interactive: false,
-        opacity: DEFAULT_OPACITY,
-        weight: CROSS_WEIGHT,
-      },
-    ).addTo(this.map);
-    const verticalLine = L.polyline(
-      [
-        [latitude - CROSS_HALF_SIZE_DEGREES, longitude],
-        [latitude + CROSS_HALF_SIZE_DEGREES, longitude],
-      ],
-      {
-        color: CROSS_COLOR,
-        interactive: false,
-        opacity: DEFAULT_OPACITY,
-        weight: CROSS_WEIGHT,
-      },
-    ).addTo(this.map);
+    const cross = L.marker(point, {
+      icon: CROSS_ICON,
+      interactive: false,
+      keyboard: false,
+    }).addTo(this.map);
 
-    this.crossLayers.push(horizontalLine, verticalLine);
+    this.crossLayers.push(cross);
   }
 
   private addCrossesAt(points: Array<[number, number]>): void {
