@@ -15,6 +15,12 @@ const eslintConfig = [
       '@typescript-eslint/no-magic-numbers': 'off',
     },
   },
+  {
+    ignores: [
+      'privateFiles/**/*',
+    ],
+    name: 'Ignored files',
+  },
 ];
 
 export default eslintConfig;

@@ -23,6 +23,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
+  "exclude": [
+    "./privateFiles/**/*"
+  ],
   "include": [
     "main.ts",
     "data.ts",
